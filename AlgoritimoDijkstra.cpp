@@ -41,9 +41,9 @@ void imprimeDadosArquivo(FILE *pont_arq);
 void *fechaAquivo(FILE *pont_arq);
 void calculaNumeroColunasLinhas(FILE *pont_arq, int *linhas, int *colunas);
 
-char **armazenaDadosArquivos(FILE *pont_arq, int Numlinhas, int Numcolunas);
-char **alocaMemoriaMatriz(int Numlinhas, int Numcolunas);
-void limpaMemoriaMatriz(char **Matriz);
+int **armazenaDadosArquivos(FILE *pont_arq, int Numlinhas, int Numcolunas);
+int **alocaMemoriaMatriz(int Numlinhas, int Numcolunas);
+void limpaMemoriaMatriz(int **Matriz);
 
 
 GRAFO *criaGrafo(int Numlinhas);
@@ -51,11 +51,11 @@ ADJACENCIA *criaAdjacencia(int verticeDest, char pesoAresta);
 bool criaAresta(GRAFO *graf, int verticeInicial, int verticeFinal, char peso);
 void imprimeGrafo(GRAFO *graf);
 
-void realocaElementosNoGrafo(GRAFO *grafo,char** matrizDados,int Numlinhas, int Numcolunas);
+void realocaElementosNoGrafo(GRAFO *grafo,int** matrizDados,int Numlinhas, int Numcolunas);
 
 main(void){
     FILE *arq;
-    char **matrizDados;
+    int **matrizDados;
     int Numlinhas = 0;
     int Numcolunas = 0;
 
@@ -74,9 +74,11 @@ main(void){
     imprimeGrafo(grafo);
 
     limpaMemoriaMatriz(matrizDados);
+
+    system("pause");
 }
 
-void realocaElementosNoGrafo(GRAFO *grafo,char** matrizDados,int Numlinhas, int Numcolunas){
+void realocaElementosNoGrafo(GRAFO *grafo,int** matrizDados,int Numlinhas, int Numcolunas){
     for(int i=0;i<Numlinhas;i++){
         for(int j=0;j<Numcolunas;j++){
             if(matrizDados[j][i] != '0' && matrizDados[j][i] != '\n'){
@@ -119,27 +121,32 @@ bool criaAresta(GRAFO *graf, int verticeInicial, int verticeFinal, char peso){
 void imprimeGrafo(GRAFO *graf){
     int i;
     for(i=0;i < graf->numVertices; i++){
-        printf("v%d: ",i+1);
+        printf("Vertice %d : ",i);
         ADJACENCIA *adj = graf->ArranjoVertices[i].cabeca;
         
         while(adj != NULL){
-            printf("v%d(%c)",adj->vertice+1,adj->pesoAresta);
+            printf("Vertice %d (Peso = %c) ",adj->vertice,adj->pesoAresta);
             adj = adj->proxElementListaAdj;
         }
         printf("\n");
     }
 }
 
-char **armazenaDadosArquivos(FILE *pont_arq, int Numlinhas, int Numcolunas){
-    char **matrizDadosArq = alocaMemoriaMatriz(Numlinhas,Numcolunas);
+int **armazenaDadosArquivos(FILE *pont_arq, int Numlinhas, int Numcolunas){
+    int **matrizDadosArq = alocaMemoriaMatriz(Numlinhas,Numcolunas);
     int i=0, j=0;
     char c;
+
     do{ 
+
         c = fgetc(pont_arq);
         if(c != EOF){
+
             if (c != ' ' && c != '\n'){
+
                 matrizDadosArq[i][j] = c;
                 i++;
+
                 if(i == 10){
                     i=0;
                     j++;
@@ -199,13 +206,26 @@ void *fechaAquivo(FILE *pont_arq){
 }
 
 
-char **alocaMemoriaMatriz(int Numlinhas, int Numcolunas){
-    char **Matriz;
+int **alocaMemoriaMatriz(int Numlinhas, int Numcolunas){
+    int **Matriz;
 
-    Matriz = (char**) malloc(sizeof(char)*Numlinhas);
+    Matriz = (int**) malloc(sizeof(int)*Numlinhas);
 
-    for(int i=0;i<Numlinhas; i++){
-        Matriz[i] = (char*) malloc(sizeof(char)*Numcolunas); 
+    if(Matriz != NULL){
+
+        for(int i=0;i<Numlinhas; i++){
+
+            Matriz[i] = (int*) malloc(sizeof(int)*Numcolunas); 
+
+            if(Matriz[i] == NULL){
+                printf("Memoeria insuficiente!!!");
+                exit(1);
+            }
+
+        }
+    }else{
+        printf("Memoeria insuficiente!!!");
+        exit(1);
     }
 
     return Matriz;
@@ -220,7 +240,7 @@ void imprimeDadosArquivo(FILE *pont_arq){
     }while(c != EOF);
 }
 
-void limpaMemoriaMatriz(char **Matriz){
+void limpaMemoriaMatriz(int **Matriz){
     for(int i=0;i<10;i++){
         free(Matriz[i]);
     }
