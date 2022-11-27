@@ -24,6 +24,8 @@ typedef struct No{
 
 typedef struct fila{
     NO* Inicio;
+    int peso;
+    bool chegouNoFinal;
 }FILA;
 
 typedef struct filass{
@@ -55,6 +57,10 @@ void imprimeFilaElementos(FILA *fila);
 void AdicionaNodo(FILA *fila, int info);
 FILA *criaFila();
 LISTA *criaLista(int numeroDeFilas);
+
+int iniciaCaminho(GRAFO* grafo,ADJACENCIA *adj,LISTA *ListaDeFilas,int contadorFilas, int VerticeInical, int VerticeFinal,FILA *HistoricoFilaAnt);
+void insereHistoricoDeElementoFila(FILA *FilaAnterior, FILA* NovaFila);
+void verificaMenorTrajeto(LISTA* ListaDeFilas, int contadorFilas);
 
 main(void){
     FILE *arq;
@@ -110,46 +116,12 @@ void encontraMenorRota(GRAFO* grafo){
     if(grafo->ArranjoVertices[VerticeInical].cabeca != NULL){
 
         ADJACENCIA *adj = grafo->ArranjoVertices[VerticeInical].cabeca;
+        FILA* filaDeElementos = criaFila();
+        AdicionaNodo(filaDeElementos,VerticeInical);
 
-        while(adj != NULL){
-        
-            FILA* filaDeElementos = criaFila();
-            ListaDeFilas->cabeca[contadorFilas].cabecaa = filaDeElementos;
-            AdicionaNodo(filaDeElementos,VerticeInical);
+        contadorFilas = iniciaCaminho(grafo,adj,ListaDeFilas,contadorFilas,VerticeInical,VerticeFinal,filaDeElementos);
 
-            ADJACENCIA *adjTemp = adj;
-
-            int somaPesos = 0;
-            int novoVertice = adjTemp->vertice; //Vertice que ele esta indo
-
-                while(adjTemp != NULL && novoVertice != VerticeFinal){
-
-                    novoVertice = adjTemp->vertice;
-                    AdicionaNodo(filaDeElementos,novoVertice);
-                    somaPesos = somaPesos + (adjTemp->pesoAresta -'0'); // peso aresta, (adjTemp->pesoAresta -'0')=  os valores ASCII dos caracteres são subtraídos um do outro
-                    adjTemp = grafo->ArranjoVertices[novoVertice].cabeca;
-                }
-
-                if(novoVertice ==  VerticeFinal){
-                    if(menorPesoAteagr > somaPesos || primeiroPeso){
-                        primeiroPeso = false;
-                        encontrouVerticeFinal = true;
-                        menorPesoAteagr = somaPesos;
-                        numeroDaFilaComMenorPeso = contadorFilas;
-                    }
-                }
-                contadorFilas++;
-                adj = adj->proxElementListaAdj;
-        }
-
-        if(encontrouVerticeFinal){
-            printf("\nPeso = %d\n\n",menorPesoAteagr);
-            imprimeFilaElementos(ListaDeFilas->cabeca[numeroDaFilaComMenorPeso].cabecaa);
-        }else{
-            printf("Nao existe um caminho para estes vertices inseridos.\n");
-            system("pause");
-            exit(1);
-        }
+        verificaMenorTrajeto(ListaDeFilas,contadorFilas);
 
     }else{
         printf("Vertice inicial nao possue arestas na matriz de custo.\n");
@@ -158,10 +130,81 @@ void encontraMenorRota(GRAFO* grafo){
     }
 }
 
+void verificaMenorTrajeto(LISTA* ListaDeFilas, int contadorFilas){
+    FILA* FilaAux;
+
+    bool primeiroPeso = true;
+    int MenorPesoAtual;
+    int numeroDaFilaComMenorPeso;
+
+    for(int i=0;i<contadorFilas;i++){
+        FilaAux = ListaDeFilas->cabeca[i].cabecaa;
+
+        if(FilaAux->chegouNoFinal == true){
+            if(MenorPesoAtual> FilaAux->peso || primeiroPeso){
+                primeiroPeso = false;
+                MenorPesoAtual = FilaAux->peso;
+                numeroDaFilaComMenorPeso = contadorFilas;
+            }
+        }
+    }
+
+    if(!primeiroPeso){
+        printf("\nPeso = %d\n\n",MenorPesoAtual);
+        imprimeFilaElementos(ListaDeFilas->cabeca[numeroDaFilaComMenorPeso].cabecaa);
+    }else{
+        printf("Nao existe um caminho para estes vertices inseridos.\n");
+        system("pause");
+        exit(1);
+    }
+}
+int iniciaCaminho(GRAFO* grafo,ADJACENCIA *adj,LISTA *ListaDeFilas,int contadorFilas, int VerticeInical, int VerticeFinal, FILA *HistoricoFilaAnt){
+
+    if(adj != NULL){
+
+        FILA* filaDeElementos = criaFila();
+        ListaDeFilas->cabeca[contadorFilas].cabecaa = filaDeElementos;
+        
+        insereHistoricoDeElementoFila(HistoricoFilaAnt,filaDeElementos);
+
+        ADJACENCIA *adjTemp = adj;
+        int somaPesos = 0;
+        int novoVertice = adjTemp->vertice; //Vertice que ele esta indo
+
+        while(adjTemp != NULL && novoVertice != VerticeFinal){
+            
+            if(adjTemp->proxElementListaAdj != NULL){
+                contadorFilas = iniciaCaminho(grafo,adjTemp->proxElementListaAdj,ListaDeFilas,contadorFilas=contadorFilas+1,VerticeInical,VerticeFinal,filaDeElementos);
+            }
+            novoVertice = adjTemp->vertice;
+            AdicionaNodo(filaDeElementos,novoVertice);
+            somaPesos = somaPesos + (adjTemp->pesoAresta -'0'); // peso aresta, (adjTemp->pesoAresta -'0')=  os valores ASCII dos caracteres são subtraídos um do outro
+            adjTemp = grafo->ArranjoVertices[novoVertice].cabeca;
+        }
+
+        if(novoVertice ==  VerticeFinal){
+            filaDeElementos->peso = somaPesos;
+            filaDeElementos->chegouNoFinal = true;
+        }   
+    }
+    return contadorFilas;
+}
+
+void insereHistoricoDeElementoFila(FILA *FilaAnterior, FILA* NovaFila){
+    NO *NoAux = FilaAnterior->Inicio;
+
+    while(NoAux != NULL){
+        AdicionaNodo(NovaFila,NoAux->info);
+        NoAux = NoAux->proxDaFila;
+    }
+}
+
 FILA *criaFila(){
     FILA *filaElementos = (FILA*)malloc(sizeof(FILA)); 
     if(filaElementos != NULL){
         filaElementos->Inicio = NULL;
+        filaElementos->peso = NULL;
+        filaElementos->chegouNoFinal = false;
         return filaElementos;
     }else{
         printf("Memoria insuficiente\n");
