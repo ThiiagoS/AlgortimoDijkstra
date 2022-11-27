@@ -20,22 +20,21 @@
 //     Vertice* VerticeInicial;
 //     Vertice* VerticeFinal;
 // }Aresta;
+typedef struct adjacencia{
+    int vertice;
+    float pesoAresta;
+    struct adjacencia *proxElementListaAdj;
+}ADJACENCIA;
 
-typedef struct vertice;
+typedef struct vertice{
+    ADJACENCIA *cabeca; 
+}VERTICE;
 
-
-typedef struct aresta
-{
-    float peso;
-    vertice* VerticeInterligado;
-    aresta* proximaAresta;
-}Aresta;
-
-typedef struct vertice
-{
-    char* NomeVertice = " ";
-    Aresta* ListaDeArestas;
-}Vertice;
+typedef struct grafo{
+    int numVertices;
+    int numArestas;
+    VERTICE *ArranjoVertices;
+}GRAFO;
 
 FILE *abreArquivo(char *nameFile);
 void imprimeDadosArquivo(FILE *pont_arq);
@@ -46,7 +45,13 @@ char **armazenaDadosArquivos(FILE *pont_arq, int Numlinhas, int Numcolunas);
 char **alocaMemoriaMatriz(int Numlinhas, int Numcolunas);
 void limpaMemoriaMatriz(char **Matriz);
 
-void calculaMenorCaminho(char **matrizDados,int Numlinhas, int Numcolunas);
+
+GRAFO *criaGrafo(int Numlinhas);
+ADJACENCIA *criaAdjacencia(int verticeDest, float pesoAresta);
+bool criaAresta(GRAFO *graf, int verticeInicial, int verticeFinal, float peso);
+void imprimeGrafo(GRAFO *graf);
+
+void realocaElementosNoGrafo(GRAFO *grafo,char** matrizDados,int Numlinhas, int Numcolunas);
 
 main(void){
     FILE *arq;
@@ -62,33 +67,69 @@ main(void){
     matrizDados = armazenaDadosArquivos(arq, Numlinhas, Numcolunas);
     fechaAquivo(arq);
 
-    limpaMemoriaMatriz(matrizDados);
+    GRAFO* grafo = criaGrafo(Numlinhas);
+
+    realocaElementosNoGrafo(grafo,matrizDados,Numlinhas, Numcolunas);
+
+    imprimeGrafo(grafo);
+
+    // limpaMemoriaMatriz(matrizDados);
 }
 
+void realocaElementosNoGrafo(GRAFO *grafo,char** matrizDados,int Numlinhas, int Numcolunas){
+    for(int i=0;i<Numlinhas;i++){
+        for(int j=0;j<Numcolunas;j++){
+            if(matrizDados[j][i] != '0' && matrizDados[i][j] != '\n'){
+                criaAresta(grafo,i,j,matrizDados[i][j]);
+            }
+        }
+    }
+}
+GRAFO *criaGrafo(int Numlinhas){
+    int i;
 
-Vertice* CriaNovoElemento(){
-    Vertice * NovoVertice;
+    GRAFO *grafo = (GRAFO*)malloc(sizeof(GRAFO));
+    grafo->numVertices = Numlinhas;
+    grafo->numArestas = 0;
+    grafo->ArranjoVertices = (VERTICE *)malloc(sizeof(VERTICE)*Numlinhas);
+    for(i=0;i<Numlinhas;i++){
+        grafo->ArranjoVertices[i].cabeca = NULL;
+    }
+    return(grafo);
+}
 
-    NovoVertice = (Vertice*)malloc(sizeof(Vertice));
-    if(NovoVertice != NULL){
-        return NovoVertice;
-    }else{
-        printf("Memoria insuficiente para alocar.");
-        exit(1);
+ADJACENCIA *criaAdjacencia(int verticeDest, float pesoAresta){
+    ADJACENCIA *adj = (ADJACENCIA *)malloc(sizeof(ADJACENCIA));
+    adj->vertice = verticeDest;
+    adj->pesoAresta = pesoAresta;
+    adj->proxElementListaAdj = NULL;
+
+    return adj;
+}
+
+bool criaAresta(GRAFO *graf, int verticeInicial, int verticeFinal, float peso){
+    
+    ADJACENCIA *novo = criaAdjacencia(verticeFinal,peso);
+    novo->proxElementListaAdj = graf->ArranjoVertices[verticeInicial].cabeca;
+    graf->ArranjoVertices[verticeInicial].cabeca = novo;
+    graf->numArestas++;
+    return true;
+}
+
+void imprimeGrafo(GRAFO *graf){
+    int i;
+    for(i=0;i < graf->numVertices; i++){
+        printf("v%d",i);
+        ADJACENCIA *adj = graf->ArranjoVertices[i].cabeca;
+        
+        while(adj != NULL){
+            printf("v%d(%d)",adj->vertice,adj->pesoAresta);
+            adj = adj->proxElementListaAdj;
+        }
+        printf("\n");
     }
 }
 
-Aresta* CriaNovaAresta(){
-    Aresta * NovoAresta;
-
-    NovoAresta = (Aresta*)malloc(sizeof(Aresta));
-    if(NovoAresta != NULL){
-        return NovoAresta;
-    }else{
-        printf("Memoria insuficiente para alocar.");
-        exit(1);
-    }
-}
 char **armazenaDadosArquivos(FILE *pont_arq, int Numlinhas, int Numcolunas){
     char **matrizDadosArq = alocaMemoriaMatriz(Numlinhas,Numcolunas);
     int i=0, j=0;
@@ -124,7 +165,6 @@ void calculaNumeroColunasLinhas(FILE *pont_arq, int *linhas, int *colunas){
     char c;
 
     bool controlaContagemColunas = true;
-    bool verificarQuebraDeLinhas = false;
     int contadorCol = 0;
     do{
         c = fgetc(pont_arq);
