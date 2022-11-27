@@ -36,6 +36,24 @@ typedef struct grafo{
     VERTICE *ArranjoVertices;
 }GRAFO;
 
+
+typedef struct No{
+    int info;
+    No *proxDaFila;
+}NO;
+
+typedef struct fila{
+    NO* Inicio;
+}FILA;
+
+typedef struct filass{
+    FILA *cabecaa;
+}FILASS;
+
+typedef struct lista{
+    FILASS *cabeca;
+}LISTA;
+
 FILE *abreArquivo(char *nameFile);
 void imprimeDadosArquivo(FILE *pont_arq);
 void *fechaAquivo(FILE *pont_arq);
@@ -52,7 +70,13 @@ bool criaAresta(GRAFO *graf, int verticeInicial, int verticeFinal, char peso);
 void imprimeGrafo(GRAFO *graf);
 
 void realocaElementosNoGrafo(GRAFO *grafo,int** matrizDados,int Numlinhas, int Numcolunas);
+void encontraMenorRota(GRAFO* grafo);
 
+void AdicionaNodo(FILA *fila, int info);
+FILA *criaFila();
+LISTA *criaLista(int numeroDeFilas);
+
+void imprimeFilaElementos(FILA *fila);
 main(void){
     FILE *arq;
     int **matrizDados;
@@ -73,11 +97,143 @@ main(void){
 
     imprimeGrafo(grafo);
 
-    limpaMemoriaMatriz(matrizDados);
+    encontraMenorRota(grafo);
 
+    limpaMemoriaMatriz(matrizDados);
+    
+    printf("\n\n");
     system("pause");
 }
 
+void encontraMenorRota(GRAFO* grafo){
+
+    LISTA* ListaDeFilas = criaLista(grafo->numArestas);
+    int contadorFilas = 0;
+
+    int numeroDaFilaComMenorPeso = 0;
+    
+    int menorPesoAteagr = 0;
+    bool primeiroPeso = true;
+
+    int VerticeInical;
+    int VerticeFinal;
+
+    printf("Digite o vertice inicial: ");
+    // scanf("%d",&VerticeInical);
+    VerticeInical = 1;
+    VerticeInical--;
+
+    printf("Digite o vertice final : ");
+    // scanf("%d",&VerticeFinal);
+    VerticeFinal= 5;
+    VerticeFinal--;
+    
+    if(grafo->ArranjoVertices[VerticeInical].cabeca != NULL){
+
+
+
+        ADJACENCIA *adj = grafo->ArranjoVertices[VerticeInical].cabeca;
+        while(adj != NULL){
+        
+        FILA* filaDeElementos = criaFila();
+        ListaDeFilas->cabeca[contadorFilas].cabecaa = filaDeElementos;
+        AdicionaNodo(filaDeElementos,VerticeInical);
+
+        ADJACENCIA *adjTemp = adj;
+
+        int somaPesos = 0;
+        int novoVertice = adjTemp->vertice; //Vertice que ele esta indo
+
+            while(adjTemp != NULL && novoVertice != VerticeFinal){
+
+                novoVertice = adjTemp->vertice;
+                AdicionaNodo(filaDeElementos,novoVertice);
+                somaPesos = somaPesos + (adjTemp->pesoAresta -'0'); // peso aresta, (adjTemp->pesoAresta -'0')=  os valores ASCII dos caracteres são subtraídos um do outro
+                adjTemp = grafo->ArranjoVertices[novoVertice].cabeca;
+            }
+
+            if(novoVertice ==  VerticeFinal){
+                if(menorPesoAteagr > somaPesos || primeiroPeso){
+                    primeiroPeso = false;
+                    menorPesoAteagr = somaPesos;
+                    numeroDaFilaComMenorPeso = contadorFilas;
+                }
+            }
+            contadorFilas++;
+            adj = adj->proxElementListaAdj;
+        }
+
+        printf("\n\nPeso = %d\n\n",menorPesoAteagr);
+        imprimeFilaElementos(ListaDeFilas->cabeca[numeroDaFilaComMenorPeso].cabecaa);
+    }else{
+        printf("Vertice inicial nao possue arestas na matriz de custo.\n");
+    }
+}
+
+FILA *criaFila(){
+    FILA *filaElementos = (FILA*)malloc(sizeof(FILA)); 
+    if(filaElementos != NULL){
+        filaElementos->Inicio = NULL;
+        return filaElementos;
+    }else{
+        printf("Memoria insuficiente");
+        exit(1);
+    }
+}
+
+LISTA *criaLista(int numeroDeFilas){
+
+    LISTA *listaDeFilas = (LISTA*)malloc(sizeof(LISTA)); 
+
+    if(listaDeFilas != NULL){
+        
+    listaDeFilas->cabeca = (FILASS*)malloc(sizeof(FILASS)*numeroDeFilas);
+    for(int i=0;i<numeroDeFilas;i++){
+        listaDeFilas->cabeca[i].cabecaa = NULL;
+    }
+
+    }else{
+        printf("Memoria insuficiente");
+        exit(1);
+    }
+    return listaDeFilas;
+}
+
+void imprimeFilaElementos(FILA *fila){
+    NO *NoAux = fila->Inicio;
+    printf("Caminho encontrado: ");
+    while(NoAux !=NULL){
+        if(NoAux->proxDaFila == NULL){
+            printf("%d ",NoAux->info+1);
+        }else{
+            printf("%d -> ",NoAux->info+1);   
+        }
+        NoAux = NoAux->proxDaFila;
+    }
+}
+void AdicionaNodo(FILA *fila, int info){
+    NO* NovoElemento = (NO*)malloc(sizeof(NO));
+    NO* NoAux = fila->Inicio;
+    NO* NoAnterior;
+    if(NovoElemento != NULL){
+
+        if(NoAux == NULL){
+            fila->Inicio = NovoElemento;
+        }else{
+            while(NoAux !=NULL){
+                NoAnterior = NoAux;
+                NoAux = NoAux->proxDaFila;
+            }
+            NoAnterior->proxDaFila = NovoElemento;
+        }
+        NovoElemento->info = info;
+        NovoElemento->proxDaFila = NULL;
+
+    }else{
+        printf("Memoria insuficiente");
+        exit(1);
+    }
+}
 void realocaElementosNoGrafo(GRAFO *grafo,int** matrizDados,int Numlinhas, int Numcolunas){
     for(int i=0;i<Numlinhas;i++){
         for(int j=0;j<Numcolunas;j++){
@@ -121,11 +277,11 @@ bool criaAresta(GRAFO *graf, int verticeInicial, int verticeFinal, char peso){
 void imprimeGrafo(GRAFO *graf){
     int i;
     for(i=0;i < graf->numVertices; i++){
-        printf("Vertice %d : ",i);
+        printf("Vertice %d : ",i+1);
         ADJACENCIA *adj = graf->ArranjoVertices[i].cabeca;
         
         while(adj != NULL){
-            printf("Vertice %d (Peso = %c) ",adj->vertice,adj->pesoAresta);
+            printf("Vertice %d (Peso = %c) ",adj->vertice+1,adj->pesoAresta);
             adj = adj->proxElementListaAdj;
         }
         printf("\n");
