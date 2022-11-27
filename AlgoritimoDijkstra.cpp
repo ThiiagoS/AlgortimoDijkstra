@@ -22,7 +22,7 @@
 // }Aresta;
 typedef struct adjacencia{
     int vertice;
-    float pesoAresta;
+    char pesoAresta;
     struct adjacencia *proxElementListaAdj;
 }ADJACENCIA;
 
@@ -47,8 +47,8 @@ void limpaMemoriaMatriz(char **Matriz);
 
 
 GRAFO *criaGrafo(int Numlinhas);
-ADJACENCIA *criaAdjacencia(int verticeDest, float pesoAresta);
-bool criaAresta(GRAFO *graf, int verticeInicial, int verticeFinal, float peso);
+ADJACENCIA *criaAdjacencia(int verticeDest, char pesoAresta);
+bool criaAresta(GRAFO *graf, int verticeInicial, int verticeFinal, char peso);
 void imprimeGrafo(GRAFO *graf);
 
 void realocaElementosNoGrafo(GRAFO *grafo,char** matrizDados,int Numlinhas, int Numcolunas);
@@ -73,14 +73,14 @@ main(void){
 
     imprimeGrafo(grafo);
 
-    // limpaMemoriaMatriz(matrizDados);
+    limpaMemoriaMatriz(matrizDados);
 }
 
 void realocaElementosNoGrafo(GRAFO *grafo,char** matrizDados,int Numlinhas, int Numcolunas){
     for(int i=0;i<Numlinhas;i++){
         for(int j=0;j<Numcolunas;j++){
-            if(matrizDados[j][i] != '0' && matrizDados[i][j] != '\n'){
-                criaAresta(grafo,i,j,matrizDados[i][j]);
+            if(matrizDados[j][i] != '0' && matrizDados[j][i] != '\n'){
+                criaAresta(grafo,i,j,matrizDados[j][i]);
             }
         }
     }
@@ -98,7 +98,7 @@ GRAFO *criaGrafo(int Numlinhas){
     return(grafo);
 }
 
-ADJACENCIA *criaAdjacencia(int verticeDest, float pesoAresta){
+ADJACENCIA *criaAdjacencia(int verticeDest, char pesoAresta){
     ADJACENCIA *adj = (ADJACENCIA *)malloc(sizeof(ADJACENCIA));
     adj->vertice = verticeDest;
     adj->pesoAresta = pesoAresta;
@@ -107,7 +107,7 @@ ADJACENCIA *criaAdjacencia(int verticeDest, float pesoAresta){
     return adj;
 }
 
-bool criaAresta(GRAFO *graf, int verticeInicial, int verticeFinal, float peso){
+bool criaAresta(GRAFO *graf, int verticeInicial, int verticeFinal, char peso){
     
     ADJACENCIA *novo = criaAdjacencia(verticeFinal,peso);
     novo->proxElementListaAdj = graf->ArranjoVertices[verticeInicial].cabeca;
@@ -119,11 +119,11 @@ bool criaAresta(GRAFO *graf, int verticeInicial, int verticeFinal, float peso){
 void imprimeGrafo(GRAFO *graf){
     int i;
     for(i=0;i < graf->numVertices; i++){
-        printf("v%d",i);
+        printf("v%d: ",i+1);
         ADJACENCIA *adj = graf->ArranjoVertices[i].cabeca;
         
         while(adj != NULL){
-            printf("v%d(%d)",adj->vertice,adj->pesoAresta);
+            printf("v%d(%c)",adj->vertice+1,adj->pesoAresta);
             adj = adj->proxElementListaAdj;
         }
         printf("\n");
@@ -136,12 +136,14 @@ char **armazenaDadosArquivos(FILE *pont_arq, int Numlinhas, int Numcolunas){
     char c;
     do{ 
         c = fgetc(pont_arq);
-        if (c != ' '){
-            matrizDadosArq[i][j] = c;
-            i++;
-            if(i == 10){
-                i=0;
-                j++;
+        if(c != EOF){
+            if (c != ' ' && c != '\n'){
+                matrizDadosArq[i][j] = c;
+                i++;
+                if(i == 10){
+                    i=0;
+                    j++;
+                }
             }
         }
     }while(c != EOF);
