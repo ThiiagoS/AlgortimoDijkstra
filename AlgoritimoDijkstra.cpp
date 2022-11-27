@@ -36,6 +36,8 @@ typedef struct lista{
     FILASS *cabeca;
 }LISTA;
 
+//Nomes: Thiago F. Santos,  Eduarda Cavalheiro, Guilherme Knak
+
 FILE *abreArquivo(char *nameFile);
 void imprimeDadosArquivo(FILE *pont_arq);
 void *fechaAquivo(FILE *pont_arq);
@@ -137,7 +139,7 @@ void verificaMenorTrajeto(LISTA* ListaDeFilas, int contadorFilas){
     int MenorPesoAtual;
     int numeroDaFilaComMenorPeso;
 
-    for(int i=0;i<contadorFilas;i++){
+    for(int i=0;i<=contadorFilas;i++){
         FilaAux = ListaDeFilas->cabeca[i].cabecaa;
 
         if(FilaAux->chegouNoFinal == true){
@@ -178,12 +180,11 @@ int iniciaCaminho(GRAFO* grafo,ADJACENCIA *adj,LISTA *ListaDeFilas,int contadorF
             }
             novoVertice = adjTemp->vertice;
             AdicionaNodo(filaDeElementos,novoVertice);
-            somaPesos = somaPesos + (adjTemp->pesoAresta -'0'); // peso aresta, (adjTemp->pesoAresta -'0')=  os valores ASCII dos caracteres são subtraídos um do outro
+            filaDeElementos->peso = filaDeElementos->peso + (adjTemp->pesoAresta -'0');// (adjTemp->pesoAresta -'0') =  os valores ASCII dos caracteres são subtraídos um do outro
             adjTemp = grafo->ArranjoVertices[novoVertice].cabeca;
         }
 
         if(novoVertice ==  VerticeFinal){
-            filaDeElementos->peso = somaPesos;
             filaDeElementos->chegouNoFinal = true;
         }   
     }
@@ -192,6 +193,7 @@ int iniciaCaminho(GRAFO* grafo,ADJACENCIA *adj,LISTA *ListaDeFilas,int contadorF
 
 void insereHistoricoDeElementoFila(FILA *FilaAnterior, FILA* NovaFila){
     NO *NoAux = FilaAnterior->Inicio;
+    NovaFila->peso = FilaAnterior->peso;
 
     while(NoAux != NULL){
         AdicionaNodo(NovaFila,NoAux->info);
@@ -203,7 +205,7 @@ FILA *criaFila(){
     FILA *filaElementos = (FILA*)malloc(sizeof(FILA)); 
     if(filaElementos != NULL){
         filaElementos->Inicio = NULL;
-        filaElementos->peso = NULL;
+        filaElementos->peso = 0;
         filaElementos->chegouNoFinal = false;
         return filaElementos;
     }else{
