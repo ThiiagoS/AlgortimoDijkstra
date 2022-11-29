@@ -146,7 +146,7 @@ void verificaMenorTrajeto(LISTA* ListaDeFilas, int contadorFilas){
             if(MenorPesoAtual> FilaAux->peso || primeiroPeso){
                 primeiroPeso = false;
                 MenorPesoAtual = FilaAux->peso;
-                numeroDaFilaComMenorPeso = contadorFilas;
+                numeroDaFilaComMenorPeso = i;
             }
         }
     }
