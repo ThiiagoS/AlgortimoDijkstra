@@ -28,12 +28,12 @@ typedef struct fila{
     bool chegouNoFinal;
 }FILA;
 
-typedef struct filass{
-    FILA *cabecaa;
-}FILASS;
+typedef struct controlaFila{
+    FILA *header;
+}CONTROLAFILA;
 
 typedef struct lista{
-    FILASS *cabeca;
+    CONTROLAFILA *cabeca;
 }LISTA;
 
 //Nomes: Thiago F. Santos,  Eduarda Cavalheiro, Guilherme Knak
@@ -64,6 +64,9 @@ int iniciaCaminho(GRAFO* grafo,ADJACENCIA *adj,LISTA *ListaDeFilas,int contadorF
 void insereHistoricoDeElementoFila(FILA *FilaAnterior, FILA* NovaFila);
 void verificaMenorTrajeto(LISTA* ListaDeFilas, int contadorFilas);
 
+void limpaMemoriaListaFila(LISTA* ListaDeFilas,int contadorFilas);
+void limpaMemoriaGrafo(GRAFO *grafo, int Numlinhas);
+
 main(void){
     FILE *arq;
     int **matrizDados;
@@ -87,7 +90,8 @@ main(void){
     encontraMenorRota(grafo);
 
     limpaMemoriaMatriz(matrizDados);
-    
+    limpaMemoriaGrafo(grafo,Numlinhas);
+
     printf("\n\n");
     system("pause");
 }
@@ -125,6 +129,8 @@ void encontraMenorRota(GRAFO* grafo){
 
         verificaMenorTrajeto(ListaDeFilas,contadorFilas);
 
+        limpaMemoriaListaFila(ListaDeFilas,contadorFilas);
+
     }else{
         printf("Vertice inicial nao possue arestas na matriz de custo.\n");
         system("pause");
@@ -140,7 +146,7 @@ void verificaMenorTrajeto(LISTA* ListaDeFilas, int contadorFilas){
     int numeroDaFilaComMenorPeso;
 
     for(int i=0;i<=contadorFilas;i++){
-        FilaAux = ListaDeFilas->cabeca[i].cabecaa;
+        FilaAux = ListaDeFilas->cabeca[i].header;
 
         if(FilaAux->chegouNoFinal == true){
             if(MenorPesoAtual> FilaAux->peso || primeiroPeso){
@@ -153,7 +159,7 @@ void verificaMenorTrajeto(LISTA* ListaDeFilas, int contadorFilas){
 
     if(!primeiroPeso){
         printf("\nPeso = %d\n\n",MenorPesoAtual);
-        imprimeFilaElementos(ListaDeFilas->cabeca[numeroDaFilaComMenorPeso].cabecaa);
+        imprimeFilaElementos(ListaDeFilas->cabeca[numeroDaFilaComMenorPeso].header);
     }else{
         printf("Nao existe um caminho para estes vertices inseridos.\n");
         system("pause");
@@ -165,7 +171,7 @@ int iniciaCaminho(GRAFO* grafo,ADJACENCIA *adj,LISTA *ListaDeFilas,int contadorF
     if(adj != NULL){
 
         FILA* filaDeElementos = criaFila();
-        ListaDeFilas->cabeca[contadorFilas].cabecaa = filaDeElementos;
+        ListaDeFilas->cabeca[contadorFilas].header = filaDeElementos;
         
         insereHistoricoDeElementoFila(HistoricoFilaAnt,filaDeElementos);
 
@@ -221,9 +227,9 @@ LISTA *criaLista(int numeroDeFilas){
 
     if(listaDeFilas != NULL){
         
-        listaDeFilas->cabeca = (FILASS*)malloc(sizeof(FILASS)*numeroDeFilas);
+        listaDeFilas->cabeca = (CONTROLAFILA*)malloc(sizeof(CONTROLAFILA)*numeroDeFilas);
         for(int i=0;i<numeroDeFilas;i++){
-            listaDeFilas->cabeca[i].cabecaa = NULL;
+            listaDeFilas->cabeca[i].header = NULL;
         }
     
     }else{
@@ -439,4 +445,22 @@ void limpaMemoriaMatriz(int **Matriz){
         free(Matriz[i]);
     }
     free(Matriz);
+}
+
+void limpaMemoriaGrafo(GRAFO *grafo, int Numlinhas){
+    for(int i=0;i<Numlinhas;i++){
+        free(grafo->ArranjoVertices[i].cabeca);
+    }
+    free(grafo->ArranjoVertices);
+    free(grafo);
+}
+
+void limpaMemoriaListaFila(LISTA* ListaDeFilas,int contadorFilas){
+    FILA* FilaAux;
+
+    for(int i=0;i<=contadorFilas;i++){
+        FilaAux = ListaDeFilas->cabeca[i].header;
+        free(FilaAux);
+    }
+    free(ListaDeFilas);
 }
