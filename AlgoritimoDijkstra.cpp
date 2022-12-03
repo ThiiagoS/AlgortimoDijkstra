@@ -71,12 +71,15 @@ void verificaMenorTrajeto(LISTA* ListaDeFilas, int contadorFilas);
 void limpaMemoriaListaFila(LISTA* ListaDeFilas,int contadorFilas);
 void limpaMemoriaGrafo(GRAFO *grafo, int Numlinhas);
 
+char* retornaNomeCidade(int Vertice);
+
 main(void){
     FILE *arq;
     int **matrizDados;
     int Numlinhas = 0;
     int Numcolunas = 0;
-    printf("\n\n");
+    printf("\n############### ALGORITMO DE DIJKSTRA ###############\n\n");
+    printf("Nomes: Thiago F. Santos, Eduarda Cavalheiro, Guilherme Knak\n\n");
 
     arq = abreArquivo("TabelaCustoCaxiasAteSantaMaria.txt");
     calculaNumeroColunasLinhas(arq, &Numlinhas, &Numcolunas);
@@ -116,11 +119,11 @@ void encontraMenorRota(GRAFO* grafo){
     int VerticeInical;
     int VerticeFinal;
 
-    printf("\nDigite o vertice inicial: ");
+    printf("Digite o numero do vertice inicial: ");
     scanf("%d",&VerticeInical);
     VerticeInical--;
 
-    printf("\nDigite o vertice final : ");
+    printf("\nDigite o numero do vertice final : ");
     scanf("%d",&VerticeFinal);
     VerticeFinal--;
     
@@ -163,8 +166,9 @@ void verificaMenorTrajeto(LISTA* ListaDeFilas, int contadorFilas){
     }
 
     if(!primeiroPeso){
-        printf("\nPeso = %d\n\n",MenorPesoAtual);
+        printf("\n");
         imprimeFilaElementos(ListaDeFilas->cabeca[numeroDaFilaComMenorPeso].header);
+        printf("\n\nPeso Total = %d Km",MenorPesoAtual);
     }else{
         printf("Nao existe um caminho para estes vertices inseridos.\n");
         system("pause");
@@ -260,11 +264,65 @@ void imprimeFilaElementos(FILA *fila){
     printf("Caminho encontrado: ");
     while(NoAux !=NULL){
         if(NoAux->proxDaFila == NULL){
-            printf("%d ",NoAux->info+1);
+            printf("%s ",retornaNomeCidade(NoAux->info+1));
         }else{
-            printf("%d -> ",NoAux->info+1);   
+            printf("%s -> ",retornaNomeCidade(NoAux->info+1));   
         }
         NoAux = NoAux->proxDaFila;
+    }
+}
+
+char* retornaNomeCidade(int Vertice){
+    switch (Vertice)
+    {
+    case 1:
+        return "Caxias Do Sul";
+        break;
+    case 2:
+        return "Farroupilha";
+        break;
+    case 3:
+        return "Garibaldi";
+        break;
+    case 4:
+        return "Lajeado";
+        break;
+    case 5:
+        return "Venancio Aires";
+        break;
+    case 6:
+        return "Santa Maria";
+        break;
+    case 7:
+        return "Feliz";
+        break;
+    case 8:
+        return "Sao Vendelino";
+        break;
+    case 9:
+        return "Carlos Barbosa";
+        break;
+    case 10:
+        return "Novo Hamburgo";
+        break;
+    case 11:
+        return "Canoas";
+        break;
+    case 12:
+        return "Bento Goncalves";
+        break;
+    case 13:
+        return "Dois Lajeado";
+        break;
+    case 14:
+        return "Encantado";
+        break;
+    case 15:
+        return "Bom Principio";
+        break;
+    case 16:
+        return "Sao Sebastiao do Cai";
+        break;
     }
 }
 void AdicionaNodo(FILA *fila, int info){
@@ -339,14 +397,14 @@ bool criaAresta(GRAFO *graf, int verticeInicial, int verticeFinal, int peso){
 void imprimeGrafo(GRAFO *graf){
     int i;
     for(i=0;i < graf->numVertices; i++){
-        printf("Vertice %d : ",i+1);
+        printf("Vertice %d (%s)\n",i+1,retornaNomeCidade(i+1));
         ADJACENCIA *adj = graf->ArranjoVertices[i].cabeca;
-        
+        printf("Arestas =>\n");
         while(adj != NULL){
-            printf("Vertice %d (Peso = %d) ",adj->vertice+1,adj->pesoAresta);
+            printf("    Vertice %d (%s) | Peso = %d Km\n",adj->vertice+1,retornaNomeCidade(adj->vertice+1),adj->pesoAresta);
             adj = adj->proxElementListaAdj;
         }
-        printf("\n");
+        printf("\n\n");
     }
 }
 
