@@ -183,9 +183,13 @@ int iniciaCaminho(GRAFO* grafo,ADJACENCIA *adj,LISTA *ListaDeFilas,int contadorF
         ADJACENCIA *adjTemp = adj;
         int somaPesos = 0;
         int novoVertice = adjTemp->vertice; //Vertice que ele esta indo
+        
+        bool entrouUmaVez= false;
 
         while(adjTemp != NULL && novoVertice != VerticeFinal){
-            
+
+            entrouUmaVez = true;
+
             if(adjTemp->proxElementListaAdj != NULL){
                 contadorFilas = iniciaCaminho(grafo,adjTemp->proxElementListaAdj,ListaDeFilas,contadorFilas=contadorFilas+1,VerticeInical,VerticeFinal,filaDeElementos);
             }
@@ -196,6 +200,12 @@ int iniciaCaminho(GRAFO* grafo,ADJACENCIA *adj,LISTA *ListaDeFilas,int contadorF
         }
 
         if(novoVertice ==  VerticeFinal){
+            if(!entrouUmaVez){
+                novoVertice = adjTemp->vertice;
+                AdicionaNodo(filaDeElementos,novoVertice);
+                filaDeElementos->peso = filaDeElementos->peso + adjTemp->pesoAresta;
+                adjTemp = grafo->ArranjoVertices[novoVertice].cabeca;
+            }
             filaDeElementos->chegouNoFinal = true;
         }   
     }
@@ -368,7 +378,7 @@ int **armazenaDadosArquivos(FILE *pont_arq, int Numlinhas, int Numcolunas){
                     if(proxCaracter == ' '){
 
                         constanteCasasDecimais = ceil(pow(constanteCasasDecimais, contador-1));
-
+    
                         for(int b=0; b<contador;b++){
                             if (!vetorNumerosParaSoma[b] == 0){
                                 SomaDePesos = (SomaDePesos + (vetorNumerosParaSoma[b] * constanteCasasDecimais));
