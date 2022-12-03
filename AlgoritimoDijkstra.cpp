@@ -1,9 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <malloc.h>
+#include <math.h>
+
+#define MaiorNumeroDeCasasPeso 5
 
 typedef struct adjacencia{
     int vertice;
-    char pesoAresta;
+    int pesoAresta;
     struct adjacencia *proxElementListaAdj;
 }ADJACENCIA;
 
@@ -48,8 +52,8 @@ int **alocaMemoriaMatriz(int Numlinhas, int Numcolunas);
 void limpaMemoriaMatriz(int **Matriz);
 
 GRAFO *criaGrafo(int Numlinhas);
-ADJACENCIA *criaAdjacencia(int verticeDest, char pesoAresta);
-bool criaAresta(GRAFO *graf, int verticeInicial, int verticeFinal, char peso);
+ADJACENCIA *criaAdjacencia(int verticeDest, int pesoAresta);
+bool criaAresta(GRAFO *graf, int verticeInicial, int verticeFinal, int peso);
 void imprimeGrafo(GRAFO *graf);
 void realocaElementosNoGrafo(GRAFO *grafo,int** matrizDados,int Numlinhas, int Numcolunas);
 
@@ -72,12 +76,13 @@ main(void){
     int **matrizDados;
     int Numlinhas = 0;
     int Numcolunas = 0;
+    printf("\n\n");
 
-    arq = abreArquivo("Tabela de Custo.txt");
+    arq = abreArquivo("TabelaCustoCaxiasAteSantaMaria.txt");
     calculaNumeroColunasLinhas(arq, &Numlinhas, &Numcolunas);
     fechaAquivo(arq);
 
-    arq = abreArquivo("Tabela de Custo.txt");
+    arq = abreArquivo("TabelaCustoCaxiasAteSantaMaria.txt");
     matrizDados = armazenaDadosArquivos(arq, Numlinhas, Numcolunas);
     fechaAquivo(arq);
 
@@ -111,11 +116,11 @@ void encontraMenorRota(GRAFO* grafo){
     int VerticeInical;
     int VerticeFinal;
 
-    printf("Digite o vertice inicial: ");
+    printf("\nDigite o vertice inicial: ");
     scanf("%d",&VerticeInical);
     VerticeInical--;
 
-    printf("Digite o vertice final : ");
+    printf("\nDigite o vertice final : ");
     scanf("%d",&VerticeFinal);
     VerticeFinal--;
     
@@ -186,7 +191,7 @@ int iniciaCaminho(GRAFO* grafo,ADJACENCIA *adj,LISTA *ListaDeFilas,int contadorF
             }
             novoVertice = adjTemp->vertice;
             AdicionaNodo(filaDeElementos,novoVertice);
-            filaDeElementos->peso = filaDeElementos->peso + (adjTemp->pesoAresta -'0');// (adjTemp->pesoAresta -'0') =  os valores ASCII dos caracteres são subtraídos um do outro
+            filaDeElementos->peso = filaDeElementos->peso + adjTemp->pesoAresta;
             adjTemp = grafo->ArranjoVertices[novoVertice].cabeca;
         }
 
@@ -279,7 +284,7 @@ void AdicionaNodo(FILA *fila, int info){
 void realocaElementosNoGrafo(GRAFO *grafo,int** matrizDados,int Numlinhas, int Numcolunas){
     for(int i=0;i<Numlinhas;i++){
         for(int j=0;j<Numcolunas;j++){
-            if(matrizDados[j][i] != '0' && matrizDados[j][i] != '\n'){
+            if(matrizDados[j][i] != 0){
                 criaAresta(grafo,i,j,matrizDados[j][i]);
             }
         }
@@ -289,16 +294,21 @@ GRAFO *criaGrafo(int Numlinhas){
     int i;
 
     GRAFO *grafo = (GRAFO*)malloc(sizeof(GRAFO));
-    grafo->numVertices = Numlinhas;
-    grafo->numArestas = 0;
-    grafo->ArranjoVertices = (VERTICE *)malloc(sizeof(VERTICE)*Numlinhas);
-    for(i=0;i<Numlinhas;i++){
-        grafo->ArranjoVertices[i].cabeca = NULL;
+    if(grafo !=NULL){
+        grafo->numVertices = Numlinhas;
+        grafo->numArestas = 0;
+        grafo->ArranjoVertices = (VERTICE *)malloc(sizeof(VERTICE)*Numlinhas);
+        for(i=0;i<Numlinhas;i++){
+            grafo->ArranjoVertices[i].cabeca = NULL;
+        }
+    }else{
+        printf("Memoria Insuficiente!!");
+        exit(1);
     }
     return(grafo);
 }
 
-ADJACENCIA *criaAdjacencia(int verticeDest, char pesoAresta){
+ADJACENCIA *criaAdjacencia(int verticeDest, int pesoAresta){
     ADJACENCIA *adj = (ADJACENCIA *)malloc(sizeof(ADJACENCIA));
     adj->vertice = verticeDest;
     adj->pesoAresta = pesoAresta;
@@ -307,7 +317,7 @@ ADJACENCIA *criaAdjacencia(int verticeDest, char pesoAresta){
     return adj;
 }
 
-bool criaAresta(GRAFO *graf, int verticeInicial, int verticeFinal, char peso){
+bool criaAresta(GRAFO *graf, int verticeInicial, int verticeFinal, int peso){
     
     ADJACENCIA *novo = criaAdjacencia(verticeFinal,peso);
     novo->proxElementListaAdj = graf->ArranjoVertices[verticeInicial].cabeca;
@@ -323,7 +333,7 @@ void imprimeGrafo(GRAFO *graf){
         ADJACENCIA *adj = graf->ArranjoVertices[i].cabeca;
         
         while(adj != NULL){
-            printf("Vertice %d (Peso = %c) ",adj->vertice+1,adj->pesoAresta);
+            printf("Vertice %d (Peso = %d) ",adj->vertice+1,adj->pesoAresta);
             adj = adj->proxElementListaAdj;
         }
         printf("\n");
@@ -333,25 +343,61 @@ void imprimeGrafo(GRAFO *graf){
 int **armazenaDadosArquivos(FILE *pont_arq, int Numlinhas, int Numcolunas){
     int **matrizDadosArq = alocaMemoriaMatriz(Numlinhas,Numcolunas);
     int i=0, j=0;
-    char c;
 
+    char caracterAtual = fgetc(pont_arq);
+    char caracterAnterior = ' ';
+    char proxCaracter;
+
+    int constanteCasasDecimais= 10;
+
+    int vetorNumerosParaSoma[MaiorNumeroDeCasasPeso];
+    int contador=0;
+    
+    int SomaDePesos=0;
     do{ 
+        proxCaracter = fgetc(pont_arq);
+        if(caracterAtual != EOF){
 
-        c = fgetc(pont_arq);
-        if(c != EOF){
+            if (caracterAtual != ' ' && caracterAtual != '\n'){
+                
+                if(proxCaracter != ' ' && proxCaracter != '\n' || caracterAnterior != ' ' && caracterAtual != ' '){
 
-            if (c != ' ' && c != '\n'){
+                    vetorNumerosParaSoma[contador] = (caracterAtual -'0'); // (adjTemp->pesoAresta -'0') =  os valores ASCII dos caracteres são subtraídos um do outro
+                    contador++;
 
-                matrizDadosArq[i][j] = c;
-                i++;
+                    if(proxCaracter == ' '){
 
-                if(i == 10){
+                        constanteCasasDecimais = ceil(pow(constanteCasasDecimais, contador-1));
+
+                        for(int b=0; b<contador;b++){
+                            if (!vetorNumerosParaSoma[b] == 0){
+                                SomaDePesos = (SomaDePesos + (vetorNumerosParaSoma[b] * constanteCasasDecimais));
+                            }
+                            constanteCasasDecimais = constanteCasasDecimais/10;
+                        }
+
+                        matrizDadosArq[i][j] = SomaDePesos;
+                        SomaDePesos = 0;
+                        contador = 0;
+                        constanteCasasDecimais= 10;
+                        i++;
+
+                    }
+                }else{
+                    SomaDePesos = 0;
+                    matrizDadosArq[i][j] = (caracterAtual -'0');
+                    i++;
+                }
+
+                if(i == Numcolunas){
                     i=0;
                     j++;
                 }
             }
         }
-    }while(c != EOF);
+        caracterAnterior = caracterAtual;
+        caracterAtual = proxCaracter;
+    }while(caracterAtual != EOF);
 
     return matrizDadosArq;
 }
@@ -370,11 +416,13 @@ FILE *abreArquivo(char *nameFile){
 }
 
 void calculaNumeroColunasLinhas(FILE *pont_arq, int *linhas, int *colunas){
-    char c;
+    char c = ' ';
+    char caracterAnterior;
 
     bool controlaContagemColunas = true;
     int contadorCol = 0;
     do{
+        caracterAnterior = c;
         c = fgetc(pont_arq);
 
         if(c != ' ' && controlaContagemColunas){
@@ -382,7 +430,9 @@ void calculaNumeroColunasLinhas(FILE *pont_arq, int *linhas, int *colunas){
             if(c == '\n'){
                 controlaContagemColunas = false;
             }else{
-                *colunas = *colunas + 1;
+                if(!(caracterAnterior != ' ')){
+                    *colunas = *colunas + 1;
+                }
             }
         }
 
