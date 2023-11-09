@@ -81,11 +81,11 @@ main(void){
     printf("\n############### ALGORITMO DE DIJKSTRA ###############\n\n");
     printf("Nomes: Thiago F. Santos, Eduarda Cavalheiro, Guilherme Knak\n\n");
 
-    arq = abreArquivo("tabelaCustoCaxiasAteSantaMaria.txt");
+    arq = abreArquivo("TabelaCustoCaxiasAteSantaMaria.txt");
     calculaNumeroColunasLinhas(arq, &Numlinhas, &Numcolunas);
     fechaAquivo(arq);
 
-    arq = abreArquivo("tabelaCustoCaxiasAteSantaMaria.txt");
+    arq = abreArquivo("TabelaCustoCaxiasAteSantaMaria.txt");
     matrizDados = armazenaDadosArquivos(arq, Numlinhas, Numcolunas);
     fechaAquivo(arq);
 
